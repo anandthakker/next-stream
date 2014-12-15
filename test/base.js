@@ -8,7 +8,7 @@ var fs = require('fs'),
 test('reading', function(t) {
   var s1 = through.obj(),
   s2 = through.obj(),
-  joined = next(s1, s2);
+  joined = next([s1, s2]);
   
   s1.write('a');
   s2.write('xyz');
@@ -23,11 +23,15 @@ test('reading', function(t) {
   }));
 })
 
-test('writing', function(t) {
+test('add a stream after creating', function(t) {
   var s1 = through.obj(),
-  s2 = through.obj(),
-  joined = next(s1, s2);
-    
+    s2 = through.obj(),
+    joined = next([s1]);
+  
+  joined.push(s2);
+  
+  
+  
   s1.write('a');
   s2.write('xyz');
   s1.write('bc');

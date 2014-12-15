@@ -5,25 +5,34 @@ var Duplex = require('readable-stream').Duplex,
 module.exports = Next;
 inherits(Next, Duplex);
 
-function Next(stream1, stream2) {
-  if(!(this instanceof Next)) return new Next(stream1, stream2);
+function Next(streams) {
+  if(!(this instanceof Next)) return new Next(streams);
   Duplex.call(this);
   
   this._reading = {
     current: null,
-    next: [stream1, stream2]
+    next: [].concat(streams)
   }
   this._writing = {
     current: null,
-    next: [stream1, stream2]
+    next: [].concat(streams)
   }
   this._shift(this._reading, 'end');
   this._shift(this._writing, 'finish');
 }
 
+Next.prototype.push = function(stream) {
+  if(!this._reading.current && this._reading.next.length === 0)
+    throw new Error('Next::push after end.');
+  if(!this._writing.current && this._writing.next.length === 0)
+    throw new Error('Next::push after finish.');
+  this._reading.next.push(stream);
+  this._writing.next.push(stream);
+}
+
 Next.prototype._read = function(n) {
   var data = this._reading.current ? this._reading.current.read(n) : null;
-  if(data !== null) this.push(data);
+  if(data !== null) Duplex.prototype.push.call(this, data);
   else this._readOnShift = true;
 }
 Next.prototype._write = function(chunk, enc, next) {

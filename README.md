@@ -13,7 +13,7 @@ var next = require('next-stream');
 
 var stream1 = fs.createReadStream('file1.txt'),
     stream2 = fs.createReadStream('file2.txt'),
-    joined = next(stream1, stream2);
+    joined = next([stream1, stream2]);
 
 joined.pipe(process.stdout);
 ```
