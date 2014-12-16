@@ -61,3 +61,20 @@ test('add a stream after creating', function(t) {
     t.end();
   }));
 })
+
+test('add a stream after empty in open-ended mode', function(t) {
+  var s1 = through.obj(),
+  s2 = through.obj(),
+  joined = next([], {open: true});
+
+  joined.push(s1);
+  s1.end('abc');
+  
+  joined
+  .pipe(concat({encoding: 'string'}, function(data) {
+    t.equal(data, 'abc');
+    t.end();
+  }));
+  
+  joined.close();
+})

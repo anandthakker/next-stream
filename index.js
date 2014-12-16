@@ -21,6 +21,8 @@ function Next(streams, opts) {
 
 Next.prototype.push = function(stream) {
   this._reading.next.push(stream);
+  if(!this._reading.current)
+    this._shift();
 }
 
 Next.prototype.close = function() {
