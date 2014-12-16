@@ -20,7 +20,6 @@ function Next(streams, opts) {
 }
 
 Next.prototype.push = function(stream) {
-  console.log('push');
   this._reading.next.push(stream);
 }
 
@@ -47,7 +46,6 @@ Next.prototype._read = function(n) {
   if(current) {
     var data;
     while((data = current.read()) !== null) {
-      console.log('data', data);
       this._push(data);
       count++;
     }
@@ -57,7 +55,6 @@ Next.prototype._read = function(n) {
 }
 
 Next.prototype._shift = function() {
-  console.log('shift');
   var self = this;
 
   if(!(this._reading.current = this._reading.next.shift())) {
@@ -69,7 +66,6 @@ Next.prototype._shift = function() {
   
   var curr = this._reading.current;
   var done = function() {
-    console.log('end');
     curr.removeListener('end', done)
     self._shift();
   }
