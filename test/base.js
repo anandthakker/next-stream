@@ -8,7 +8,7 @@ var fs = require('fs'),
 test('reading', function(t) {
   var s1 = through.obj(),
   s2 = through.obj(),
-  joined = next([s1, s2]);
+  joined = next([s1, s2], {open: false});
   
   s1.write('a');
   s2.write('xyz');
@@ -23,14 +23,32 @@ test('reading', function(t) {
   }));
 })
 
+test('open-ended mode', function(t) {
+  var s1 = through.obj(),
+    s2 = through.obj(),
+    joined = next([s1], {open: true});
+
+  s1.end('abc');
+    
+  joined
+  .pipe(concat({encoding: 'string'}, function(data) {
+    t.equal(data, 'abcxyz');
+    t.end();
+  }));
+  
+  joined.push(s2);
+  s2.end('xyz');
+  
+  joined.close();
+  
+})
+
 test('add a stream after creating', function(t) {
   var s1 = through.obj(),
     s2 = through.obj(),
-    joined = next([s1]);
+    joined = next([s1], {open: false});
   
   joined.push(s2);
-  
-  
   
   s1.write('a');
   s2.write('xyz');

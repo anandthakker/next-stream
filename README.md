@@ -1,12 +1,11 @@
 next-stream
 ===========
 
-Attach two streams, so that the second one receives data only after the first one finishes and sends data only after the first one ends.
+Attach two or more streams `a,b,c,...` "end-to-end", so that the result streams from `a` until
+it ends, then moves on to `b` till it ends, etc.
 
 
 ## Usage
-
-### Read stream
 
 ```javascript
 var next = require('next-stream');
@@ -20,8 +19,29 @@ joined.pipe(process.stdout);
 
 Outputs contents of `file1.txt` followed by contents of `file2.txt`.
 
+## Methods
 
-### Write stream
+### var joined = next([stream1, stream2, stream3], opts);
 
-How should this work?  Should it swallow the first `end` event, using that
-to shift to the next stream?
+Create a new readable next-stream from the readable streams `stream1`,
+`stream2`, `stream3`.
+
+By default, `joined` is in *open-ended* mode, which means it
+won't emit `'end'` when the last stream in the list ends. Setting `opts.open`
+to `false` causes `joined` to end when the last stream ends.
+
+### joined.push(stream4)
+
+Add `stream4` to the end of the list of streams.
+
+### joined.close()
+
+Close `joined` if it is in open-ended mode.
+
+
+## Events
+
+### `'next'`
+
+Emitted when we've hit the end event of the current stream.  Event payload
+is the next stream, or null if there are none.

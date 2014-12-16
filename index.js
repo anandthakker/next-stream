@@ -1,58 +1,77 @@
 
-var Duplex = require('readable-stream').Duplex,
+var Readable = require('readable-stream'),
     inherits = require('inherits');
 
 module.exports = Next;
-inherits(Next, Duplex);
+inherits(Next, Readable);
 
-function Next(streams) {
-  if(!(this instanceof Next)) return new Next(streams);
-  Duplex.call(this);
+function Next(streams, opts) {
+  if(!(this instanceof Next)) return new Next(streams, opts);
+  Readable.call(this);
+  
+  opts = opts || {};
+  this._open = (typeof opts.open === 'undefined') ? true : opts.open;
   
   this._reading = {
     current: null,
     next: [].concat(streams)
   }
-  this._writing = {
-    current: null,
-    next: [].concat(streams)
-  }
-  this._shift(this._reading, 'end');
-  this._shift(this._writing, 'finish');
+  this._shift();
 }
 
 Next.prototype.push = function(stream) {
-  if(!this._reading.current && this._reading.next.length === 0)
-    throw new Error('Next::push after end.');
-  if(!this._writing.current && this._writing.next.length === 0)
-    throw new Error('Next::push after finish.');
+  console.log('push');
   this._reading.next.push(stream);
-  this._writing.next.push(stream);
 }
 
+Next.prototype.close = function() {
+  if(this._reading.current) {
+    this._open = false;
+  }
+  else {
+    this._push(null);
+  }
+}
+
+Next.prototype.open = function() {
+  // TODO: check if already ended.
+  this._open = true;
+}
+
+Next.prototype._push = Readable.prototype.push;
 Next.prototype._read = function(n) {
-  var data = this._reading.current ? this._reading.current.read(n) : null;
-  if(data !== null) Duplex.prototype.push.call(this, data);
-  else this._readOnShift = true;
-}
-Next.prototype._write = function(chunk, enc, next) {
-  return this._writing.current.write(chunk, enc, next);
+  var self = this;
+  var current = this._reading.current;
+  var count = 0;
+  
+  if(current) {
+    var data;
+    while((data = current.read()) !== null) {
+      console.log('data', data);
+      this._push(data);
+      count++;
+    }
+    if(count === 0) current.on('readable', function() { self._read(n) });
+  }
+  
 }
 
-Next.prototype._shift = function(side, event) {
+Next.prototype._shift = function() {
+  console.log('shift');
   var self = this;
 
-  if(!(side.current = side.next.shift())) {
-    this.emit(event);
+  if(!(this._reading.current = this._reading.next.shift())) {
+    if(!this._open) this._push(null);
     return;
   }
   
-  if(this._readOnShift) this._read();
+  this._read();
   
-  var curr = side.current;
+  var curr = this._reading.current;
   var done = function() {
-    curr.removeListener(event, done)
-    self._shift(side, event);
+    console.log('end');
+    curr.removeListener('end', done)
+    self._shift();
   }
-  curr.on(event, done);
+  curr.on('end', done);
 }
