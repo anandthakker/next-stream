@@ -51,25 +51,16 @@ Next.prototype._read = function(n) {
       this._push(data);
       count++;
     }
-    if(count === 0) current.on('readable', function() { self._read(n) });
+    if(count === 0) current.once('readable', this._read.bind(this, n));
   }
   
 }
 
 Next.prototype._shift = function() {
-  var self = this;
-
   if(!(this._reading.current = this._reading.next.shift())) {
     if(!this._open) this._push(null);
     return;
   }
-  
   this._read();
-  
-  var curr = this._reading.current;
-  var done = function() {
-    curr.removeListener('end', done)
-    self._shift();
-  }
-  curr.on('end', done);
+  this._reading.current.once('end', this._shift.bind(this));
 }
