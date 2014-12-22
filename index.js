@@ -1,6 +1,8 @@
 
 var Readable = require('readable-stream'),
     inherits = require('inherits');
+    
+var debug = require('debug')('next-stream');
 
 module.exports = Next;
 inherits(Next, Readable);
@@ -18,6 +20,7 @@ function Next(streams, opts) {
 }
 
 Next.prototype.push = function(stream) {
+  debug('PUSH')
   this._next.push(stream);
   if(!this._current)
     this._shift();
@@ -45,29 +48,40 @@ Next.prototype._read = function(n) {
     var data;
     while((data = current.read()) !== null) {
       this._push(data);
+      debug('_read', data.toString());
       count++;
     }
     if(count === 0) current.once('readable', this._read.bind(this, n));
   }
-  else if(current) {
+  else if(current && current.length > 0) {
+    debug('_read non-stream', current)
     var data;
-    while(data = current.shift())
+    while(data = current.shift()) {
       this._push(data);
+    }
+  }
+  else if(current && current.length === 0) {
+    debug('_read non-stream end');
     this._shift();
   }
-  
 }
 
 Next.prototype._shift = function() {
+  var self = this;
+  debug('SHIFT', this._next.length);
   if(!(this._current = this._next.shift())) {
+    debug('_next empty, ending stream.')
     if(!this._open) this._push(null);
     return;
   }
   if(isReadableStream(this._current)) {
-    this._current.once('end', this._shift.bind(this));
+    debug('(stream)');
+    this._current.once('end', function() { debug('end stream'); self._shift(); });
     this._read();
   }
   else {
+    debug('(non-stream)');
+    
     var nonStreams = [this._current];
     while(this._next[0] && !isReadableStream(this._next[0]))
       nonStreams.push(this._next.shift());
