@@ -19,6 +19,22 @@ joined.pipe(process.stdout);
 
 Outputs contents of `file1.txt` followed by contents of `file2.txt`.
 
+For convenience, non-stream inputs also work as you'd expect:
+
+```javascript
+var next = require('next-stream');
+
+var stream1 = fs.createReadStream('file1.txt'),
+stream2 = fs.createReadStream('file2.txt'),
+joined = next([stream1, '--------- between ---------', stream2]);
+
+joined.pipe(process.stdout);
+```
+
+Outputs contents of `file1.txt`, followed by `'--------- between ---------'`,
+followed by contents of `file2.txt`.
+
+
 ## Methods
 
 ### var joined = next([stream1, stream2, stream3], opts);
