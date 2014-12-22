@@ -1,4 +1,4 @@
-next-stream
+next-stream [![Build Status](https://travis-ci.org/anandthakker/next-stream.svg?branch=master)](https://travis-ci.org/anandthakker/next-stream)
 ===========
 
 Attach two or more streams `a,b,c,...` "end-to-end", so that the result streams from `a` until
