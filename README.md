@@ -4,6 +4,8 @@ next-stream [![Build Status](https://travis-ci.org/anandthakker/next-stream.svg?
 Concatenate/attach a series of streams `a,b,c,...` "end-to-end", so that the 
 result streams from `a` until it ends, then moves on to `b` till it ends, etc.
 
+If you don't need laziness or non-streams, you should probably just use [stream-cat](https://www.npmjs.com/package/stream-cat).
+
 Supports:
  - **laziness**: If anything in the series is a function instead of a stream, it will be called
 when its 'turn' comes up, and its return value will be used in its place.
