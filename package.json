@@ -1,7 +1,7 @@
 {
   "name": "next-stream",
   "version": "2.1.2",
-  "description": "Attach two streams, so that the second one receives data only after the first one finishes and sends data only after the first one ends.",
+  "description": "Concatenate a series of streams 'end-to-end'.",
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js"

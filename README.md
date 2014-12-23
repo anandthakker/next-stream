@@ -1,8 +1,12 @@
 next-stream [![Build Status](https://travis-ci.org/anandthakker/next-stream.svg?branch=master)](https://travis-ci.org/anandthakker/next-stream)
 ===========
 
-Attach two or more streams `a,b,c,...` "end-to-end", so that the result streams from `a` until
-it ends, then moves on to `b` till it ends, etc.
+Concatenate/attach a series of streams `a,b,c,...` "end-to-end", so that the 
+result streams from `a` until it ends, then moves on to `b` till it ends, etc.
+
+If anything in the series is a non-readable-stream object, just push it through as a chunk.
+
+If any of the given streams in the series emits an error, propagate it.
 
 
 ## Usage
@@ -14,10 +18,14 @@ var stream1 = fs.createReadStream('file1.txt'),
     stream2 = fs.createReadStream('file2.txt'),
     joined = next([stream1, stream2]);
 
+joined.push(fs.createReadStream('file3.txt'));
+joined.close(); // tell `joined` to emit `end` when the last stream ends.
+
 joined.pipe(process.stdout);
 ```
 
-Outputs contents of `file1.txt` followed by contents of `file2.txt`.
+Outputs contents of `file1.txt` followed by contents of `file2.txt` and then
+the contents of `file3.txt`.
 
 For convenience, non-stream inputs also work as you'd expect:
 
