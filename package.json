@@ -1,6 +1,6 @@
 {
   "name": "next-stream",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Concatenate a series of streams 'end-to-end'.",
   "main": "index.js",
   "scripts": {
