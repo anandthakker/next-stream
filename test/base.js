@@ -23,6 +23,35 @@ test('reading', function(t) {
   }));
 })
 
+test.only('transmits errors', function(t) {
+  
+  var s1 = through.obj(writeErrors),
+    s2 = through.obj(writeErrors);
+  
+  var joined = next([s1, s2], {open: false});
+
+  t.plan(4);
+  
+  joined.pipe(concat({encoding: 'string'}, function(data) {
+    t.equal(data, 'thing1thing2thing3');
+    t.end();
+  }))
+  
+  joined.on('error', function(err) {
+    t.equal(err.message, 'this is an error')
+  })
+  
+  s1.write('thing1');
+  s2.write('thing3'); // test an error from a 'future' stream.
+  s1.end('thing2');
+  s2.end();
+  
+  function writeErrors(chunk, enc, next) {
+    this.push(chunk);
+    next(new Error('this is an error'));
+  }
+})
+
 test('open-ended mode', function(t) {
   var s1 = through.obj(),
     s2 = through.obj(),

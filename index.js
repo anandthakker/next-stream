@@ -16,6 +16,17 @@ function Next(streams, opts) {
   
   this._current = null;
   this._next = [].concat(streams);
+
+  // propagate errors in all streams.
+  var self = this;
+  var onError = function(e) { self.emit('error', e); }
+  this._next
+  .filter(isReadableStream)
+  .forEach(function(stream) {
+    stream.on('error', onError);
+    stream.once('end', function() { stream.removeListener('error', onError) });
+  });
+
   this._shift();
 }
 
@@ -91,6 +102,10 @@ Next.prototype._shift = function() {
 }
 
 
+// duck!
 function isReadableStream(s) {
-  return s && (typeof s.once === 'function') && (typeof s.read === 'function');
+  return s && (typeof s.once === 'function')
+  && (typeof s.on === 'function')
+  && (typeof s.removeListener === 'function')
+  && (typeof s.read === 'function');
 }
