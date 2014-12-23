@@ -23,7 +23,7 @@ test('reading', function(t) {
   }));
 })
 
-test.only('transmits errors', function(t) {
+test('transmits errors', function(t) {
   
   var s1 = through.obj(writeErrors),
     s2 = through.obj(writeErrors);
@@ -171,4 +171,49 @@ test('add a non-stream in open-ended mode', function(t) {
   joined.push('xyz');
   joined.close();
   
+})
+
+test('lazily dethunk streams', function(t) {
+  var s1 = through.obj();
+  var s2thunk = function() {
+    var s2 = through.obj();
+    setImmediate(function() { s2.end('xyz'); })
+    return s2;
+  }
+  
+  var joined = next([s1, s2thunk], {open: false});
+  
+  joined.pipe(concat({encoding: 'string'}, function(data) {
+    t.equal(data, 'abcxyz');
+    t.end();
+  }))
+  
+  s1.end('abc');
+})
+
+test('propagate errors in lazily dethunked streams', function(t) {
+  var s1 = through.obj();
+
+  var s2thunk = function() {
+    var s2 = through.obj(function(c,e,next) {
+      this.push(c);
+      next(new Error('this is an error'));
+    });
+
+    setImmediate(function() { s2.end('xyz'); })
+
+    return s2;
+  }
+  
+  var joined = next([s1, s2thunk], {open: false});
+  
+  t.plan(2);
+  joined.on('error', function(err) {
+    t.equal(err.message, 'this is an error');
+  })
+  joined.pipe(concat({encoding: 'string'}, function(data) {
+    t.equal(data, 'abcxyz');
+  }))
+  
+  s1.end('abc');
 })

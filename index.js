@@ -19,13 +19,8 @@ function Next(streams, opts) {
 
   // propagate errors in all streams.
   var self = this;
-  var onError = function(e) { self.emit('error', e); }
-  this._next
-  .filter(isReadableStream)
-  .forEach(function(stream) {
-    stream.on('error', onError);
-    stream.once('end', function() { stream.removeListener('error', onError) });
-  });
+  this._onInnerError = function(e) { self.emit('error', e); }
+  this._next.forEach(this._propagateErrors.bind(this));
 
   this._shift();
 }
@@ -85,6 +80,13 @@ Next.prototype._shift = function() {
     if(!this._open) this._push(null);
     return;
   }
+  
+  // apply the thunk
+  if(typeof this._current === 'function') {
+    this._current = this._current();
+    this._propagateErrors(this._current);
+  }
+  
   if(isReadableStream(this._current)) {
     debug('(stream)');
     this._current.once('end', function() { debug('end stream'); self._shift(); });
@@ -99,6 +101,14 @@ Next.prototype._shift = function() {
     this._current = nonStreams;
     this._read();
   }
+}
+
+Next.prototype._propagateErrors = function(stream) {
+  if(!isReadableStream(stream)) return;
+
+  var self = this;
+  stream.on('error', this._onInnerError);
+  stream.once('end', function() { stream.removeListener('error', self._onInnerError) });
 }
 
 

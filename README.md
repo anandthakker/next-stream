@@ -4,9 +4,11 @@ next-stream [![Build Status](https://travis-ci.org/anandthakker/next-stream.svg?
 Concatenate/attach a series of streams `a,b,c,...` "end-to-end", so that the 
 result streams from `a` until it ends, then moves on to `b` till it ends, etc.
 
-If anything in the series is a non-readable-stream object, just push it through as a chunk.
-
-If any of the given streams in the series emits an error, propagate it.
+Supports:
+ - **laziness**: If anything in the series is a function instead of a stream, it will be called
+when its 'turn' comes up, and its return value will be used in its place.
+ - **non-stream items**: If anything in the series is not a readable stream just push it through as a chunk at the appropriate time.
+ - **stream errors**: If any of the given streams in the series emits an error, propagate it.
 
 
 ## Usage
